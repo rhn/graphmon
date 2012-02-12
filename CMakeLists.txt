@@ -11,9 +11,11 @@ if(NOT KDE4_FOUND)
 endif(NOT KDE4_FOUND)
 
 set(multiload_SRCS
+    simpleplotter.cpp
     icongridlayout.cpp
     cpuload.cpp
     ramusage.cpp
+    swapusage.cpp
     multiload.cpp)
 
 #find_package(KDE4 REQUIRED)

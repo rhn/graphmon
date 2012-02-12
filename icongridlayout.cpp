@@ -1,5 +1,6 @@
 /***************************************************************************
  *   Copyright (C) 2010 - 2011 by Ingomar Wesp <ingomar@wesp.name>         *
+ *   Copyright (C) 2012 by Paweł Czaplejewicz <pcz@porcupinefactory.org>   *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
@@ -30,7 +31,6 @@
 
 // KDE
 #include <KDebug>
-#include <KIconLoader>
 
 // stdlib
 #include <math.h>
@@ -53,7 +53,6 @@ IconGridLayout::IconGridLayout(QGraphicsLayoutItem *parent)
 
     QSizePolicy sizePolicy(
         QSizePolicy::MinimumExpanding, QSizePolicy::MinimumExpanding);
-    //sizePolicy.setHeightForWidth(true);
     sizePolicy.setHorizontalStretch(1);
     sizePolicy.setVerticalStretch(1);
     setSizePolicy(sizePolicy);
@@ -217,10 +216,10 @@ QSizeF IconGridLayout::sizeHint(
         case Qt::PreferredSize: return m_preferredSizeHint;
         case Qt::MinimumSize:
             if (m_mode == ForceHeight) {
-                return QSizeF(0, m_maxSectionSize);
+                return QSizeF(0, m_maxSectionSize); // TODO: lower it and catch div by 0
             }
             else {
-                return QSizeF(KIconLoader::SizeSmall, m_preferredSizeHint.height());
+                return QSizeF();
             }
 
         default:
@@ -266,7 +265,6 @@ void IconGridLayout::computeGridParameters(QSizeF &preferredSize)
                                      height),
                                 minCellHeight);
 
-        // TODO: usable cell height
         int maximumRowCount = floor(double(height + CELL_SPACING) / (usableCellHeight + CELL_SPACING));
         columnCount = ceil(double(itemCount) / maximumRowCount);
         rowCount = ceil(double(itemCount) / columnCount);

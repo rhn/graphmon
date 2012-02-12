@@ -16,19 +16,15 @@ void CpuInfo::reset() {
 
 CPULoad::CPULoad(void)
 {
-    m_signal_plotter = new Plasma::SignalPlotter();
-    this->m_signal_plotter->setSvgBackground(QString());
+    m_signal_plotter = new SimplePlotter();
     this->m_signal_plotter->setBackgroundColor(Qt::black);
-    this->m_signal_plotter->setThinFrame(false);
-    this->m_signal_plotter->setShowHorizontalLines(false);
-    this->m_signal_plotter->setShowLabels(false);
-    this->m_signal_plotter->setShowTopBar(false);
-    this->m_signal_plotter->setUseAutoRange(false);
+    this->m_signal_plotter->setUseAutoMax(false);
     this->m_signal_plotter->setVerticalRange(0, 100);
-    this->m_signal_plotter->addPlot(Qt::white);
-    this->m_signal_plotter->addPlot(Qt::yellow);
-    this->m_signal_plotter->addPlot(Qt::green);
+
     this->m_signal_plotter->addPlot(Qt::red);
+    this->m_signal_plotter->addPlot(Qt::green);
+    this->m_signal_plotter->addPlot(Qt::yellow);
+    this->m_signal_plotter->addPlot(Qt::white);
 
     this->m_signal_plotter->setPreferredSize(100, 100);
     this->m_signal_plotter->setMinimumSize(10, 10);
@@ -62,6 +58,6 @@ void CPULoad::addValue(QString name, double value) {
 
 void CPULoad::update()
 {
-    this->m_signal_plotter->addSample(QList<double>() << this->m_cpu_info.wait << this->m_cpu_info.nice << this->m_cpu_info.user << this->m_cpu_info.sys);
+    this->m_signal_plotter->addSample(QList<double>() << this->m_cpu_info.sys << this->m_cpu_info.user << this->m_cpu_info.nice << this->m_cpu_info.wait);
     this->m_cpu_info.reset();
 }

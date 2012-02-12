@@ -1,7 +1,7 @@
 #ifndef RAMUSAGE_H
 #define RAMUSAGE_H
 
-#include <Plasma/SignalPlotter>
+#include "simpleplotter.h"
 
 class RAMInfo
 {
@@ -24,7 +24,7 @@ private:
     RAMInfo m_ram_info;
 
 public:
-    Plasma::SignalPlotter *m_signal_plotter;
+    SimplePlotter *m_signal_plotter;
 };
 
 #endif // RAMUSAGE_H

@@ -1,9 +1,9 @@
 #include "multiload.h"
 #include "cpuload.h"
 #include "ramusage.h"
+#include "swapusage.h"
 
 #include <QtGui/QPainter>
-#include <Plasma/SignalPlotter>
 
 Multiload::Multiload(QObject *parent, const QVariantList &args)
     : Plasma::Applet(parent, args)
@@ -15,35 +15,49 @@ Multiload::Multiload(QObject *parent, const QVariantList &args)
     setLayout(this->m_layout);
     m_ram_usage = new RAMUsage();
     this->m_layout->addItem(this->m_ram_usage->m_signal_plotter);
+    m_swap_usage = new SwapUsage();
+    this->m_layout->addItem(this->m_swap_usage->m_signal_plotter);
+    kDebug() << "created";
 }
 
 Multiload::~Multiload() {
     for(int i = 0; i < this->m_layout->count(); i++) {
         this->m_layout->removeAt(0);
     }
-
+    // layout already taken care of
     Q_FOREACH(CPULoad *cpuload, this->m_cpu_load) {
         delete cpuload;
     }
     this->m_cpu_load.clear();
 
     delete this->m_ram_usage;
+    delete this->m_swap_usage;
 }
 
 void Multiload::init()
 {
     connect(dataEngine("systemmonitor"), SIGNAL(sourceAdded(QString)), this, SLOT(sourceAdded(QString)));
+    kDebug() << "inited";
+
+
+    // XXX: race condition hell: if any sources change now, the changes are lost
+    Q_FOREACH(QString source, dataEngine("systemmonitor")->sources()) {
+        sourceAdded(source);
+    }
 }
 
 void Multiload::sourceAdded(const QString& source)
 {
+    // TODO: remove CPUs
     // TODO: more sensible sources
-    kDebug() << source;
+    //kDebug() << source;
     if (source == "cpu/cores") {
         dataEngine("systemmonitor")->connectSource(source, this, this->m_update_interval);
     } else if (source.startsWith("cpu/cpu")) {
         dataEngine("systemmonitor")->connectSource(source, this, this->m_update_interval);
     } else if (source.startsWith("mem/physical")) {
+        dataEngine("systemmonitor")->connectSource(source, this, this->m_update_interval);
+    } else if (source.startsWith("mem/swap")) {
         dataEngine("systemmonitor")->connectSource(source, this, this->m_update_interval);
     }
 }
@@ -65,6 +79,10 @@ void Multiload::dataUpdated(const QString& source, const Plasma::DataEngine::Dat
         QStringList fragments = source.split('/');
         QString value_name = fragments.back();
         m_ram_usage->addValue(value_name, data["value"].toDouble());
+    } else if (source.startsWith("mem/swap")) {
+        QStringList fragments = source.split('/');
+        QString value_name = fragments.back();
+        m_swap_usage->addValue(value_name, data["value"].toDouble());
     }
 }
 

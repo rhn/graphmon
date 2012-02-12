@@ -1,7 +1,7 @@
 #ifndef CPULOAD_H
 #define CPULOAD_H
 
-#include <Plasma/SignalPlotter>
+#include "simpleplotter.h"
 
 class CpuInfo
 {
@@ -25,7 +25,8 @@ private:
     CpuInfo m_cpu_info;
 
 public:
-    Plasma::SignalPlotter *m_signal_plotter;
+    //Plasma::SignalPlotter *m_signal_plotter;
+    SimplePlotter *m_signal_plotter;
 };
 
 #endif // CPULOAD_H

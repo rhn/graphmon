@@ -14,19 +14,15 @@ void RAMInfo::reset()
 
 RAMUsage::RAMUsage()
 {
-    m_signal_plotter = new Plasma::SignalPlotter();
-    this->m_signal_plotter->setSvgBackground(QString());
-    this->m_signal_plotter->setBackgroundColor(Qt::black);
-    this->m_signal_plotter->setThinFrame(false);
-    this->m_signal_plotter->setShowHorizontalLines(false);
-    this->m_signal_plotter->setShowLabels(false);
-    this->m_signal_plotter->setShowTopBar(false);
-    //this->m_signal_plotter->setUseAutoRange(false);
-    //this->m_signal_plotter->setVerticalRange(0, 100);
-    this->m_signal_plotter->addPlot(Qt::white);
-    this->m_signal_plotter->addPlot(Qt::yellow);
-    this->m_signal_plotter->addPlot(Qt::green);
+    m_signal_plotter = new SimplePlotter();
+    this->m_signal_plotter->setBackgroundColor(Qt::darkGray);
+    this->m_signal_plotter->setUseAutoMax(true);
+
+    this->m_signal_plotter->addPlot(Qt::darkGreen);
     this->m_signal_plotter->addPlot(Qt::red);
+    this->m_signal_plotter->addPlot(Qt::darkYellow);
+    this->m_signal_plotter->addPlot(Qt::black);
+
 
     this->m_signal_plotter->setPreferredSize(100, 100);
     this->m_signal_plotter->setMinimumSize(10, 10);
@@ -60,6 +56,6 @@ void RAMUsage::addValue(QString name, double value) {
 
 void RAMUsage::update()
 {
-    this->m_signal_plotter->addSample(QList<double>() << this->m_ram_info.application << this->m_ram_info.cached << this->m_ram_info.buf << this->m_ram_info.free);
+    this->m_signal_plotter->addSample(QList<double>() << this->m_ram_info.application << this->m_ram_info.buf << this->m_ram_info.cached << this->m_ram_info.free);
     this->m_ram_info.reset();
 }

@@ -4,10 +4,10 @@
 #include <Plasma/Applet>
 #include <Plasma/DataEngine>
 
-#include <QGraphicsGridLayout>
 #include "icongridlayout.h"
 #include "cpuload.h"
 #include "ramusage.h"
+#include "swapusage.h"
 
 class Multiload : public Plasma::Applet
 {
@@ -28,6 +28,7 @@ private:
 
     QVector<CPULoad*> m_cpu_load;
     RAMUsage *m_ram_usage;
+    SwapUsage *m_swap_usage;
     uint m_update_interval;
 
     IconGridLayout *m_layout;
