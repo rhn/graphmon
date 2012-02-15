@@ -32,11 +32,13 @@ SimplePlotter::~SimplePlotter()
 void SimplePlotter::setBackgroundColor(const QColor &color)
 {
     this->m_background_color = color;
+    update();
 }
 
 void SimplePlotter::setPlotColors(const QList<QColor> &colors)
 {
     this->m_plot_colors = colors;
+    update();
 }
 
 void SimplePlotter::setUseAutoMax(bool value)
@@ -96,14 +98,17 @@ void SimplePlotter::drawPlots(QPainter *painter, int width, int height) {
     Q_FOREACH(QList<double> sample, this->m_samples) {
         double bottom = height;
 
-        int plot_index = 0;
-        Q_FOREACH(double value, sample) {
-            double vheight = (value - min_vertical) / (max_vertical - min_vertical) * height;
-            painter->fillRect(left, bottom - vheight, 1, ceil(vheight), this->m_plot_colors[plot_index]);
-            bottom -= vheight;
-            Q_ASSERT(bottom >= -1); // float precision. should be 0
-            plot_index++;
+        if (left >= 0) {
+            int plot_index = 0;
+            Q_FOREACH(double value, sample) {
+                double vheight = (value - min_vertical) / (max_vertical - min_vertical) * height;
+                painter->fillRect(left, bottom - vheight, 1, ceil(vheight), this->m_plot_colors[plot_index]);
+                bottom -= vheight;
+                Q_ASSERT(bottom >= -1); // float precision. should be 0
+                plot_index++;
+            }
         }
+
         left++;
         Q_ASSERT(left <= width);
     }

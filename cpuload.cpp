@@ -36,7 +36,7 @@ CPULoad::CPULoad(void)
     // TODO: memory leak
 }
 
-void CPULoad::addValue(QString name, double value) {
+void CPULoad::addValue(QString &name, double value) {
     if (name == "sys") {
         this->m_cpu_info.sys = value;
         this->m_cpu_info.sys_since_update++;
@@ -60,4 +60,10 @@ void CPULoad::update()
 {
     this->m_signal_plotter->addSample(QList<double>() << this->m_cpu_info.sys << this->m_cpu_info.user << this->m_cpu_info.nice << this->m_cpu_info.wait);
     this->m_cpu_info.reset();
+}
+
+void CPULoad::setColors(QList<QColor> colors) {
+    this->m_signal_plotter->setBackgroundColor(colors[0]);
+    colors.pop_front();
+    this->m_signal_plotter->setPlotColors(colors);
 }

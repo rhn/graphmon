@@ -20,7 +20,9 @@ public:
     void setVerticalRange(double min, double max);
 
     void setBackgroundColor(const QColor &color);
+    QColor getBackgroundColors();
     void setPlotColors(const QList<QColor> &colors);
+    QColor getPlotColors();
 
     //virtual void setGeometry(const QRectF &geometry);
 protected:

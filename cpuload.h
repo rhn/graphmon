@@ -1,6 +1,7 @@
 #ifndef CPULOAD_H
 #define CPULOAD_H
 
+#include <KConfigGroup>
 #include "simpleplotter.h"
 
 class CpuInfo
@@ -13,12 +14,12 @@ public:
     void reset();
 };
 
-
 class CPULoad
 {
 public:
     CPULoad(void);
-    void addValue(QString name, double value);
+    void addValue(QString &name, double value);
+    void setColors(QList<QColor> colors);
 
 private:
     void update();

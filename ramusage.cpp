@@ -34,7 +34,7 @@ RAMUsage::RAMUsage()
     // TODO: memory leak
 }
 
-void RAMUsage::addValue(QString name, double value) {
+void RAMUsage::addValue(QString &name, double value) {
     if (name == "application") {
         this->m_ram_info.application = value;
         this->m_ram_info.application_since_update++;
@@ -58,4 +58,10 @@ void RAMUsage::update()
 {
     this->m_signal_plotter->addSample(QList<double>() << this->m_ram_info.application << this->m_ram_info.buf << this->m_ram_info.cached << this->m_ram_info.free);
     this->m_ram_info.reset();
+}
+
+void RAMUsage::setColors(QList<QColor> colors) {
+    this->m_signal_plotter->setBackgroundColor(colors[0]);
+    colors.pop_front();
+    this->m_signal_plotter->setPlotColors(colors);
 }

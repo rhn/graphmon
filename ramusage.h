@@ -17,7 +17,8 @@ class RAMUsage
 {
 public:
     RAMUsage();
-    void addValue(QString name, double value);
+    void addValue(QString &name, double value);
+    void setColors(QList<QColor> colors);
 
 private:
     void update();

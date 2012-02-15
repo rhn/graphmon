@@ -37,13 +37,30 @@
 
 const int IconGridLayout::CELL_SPACING = 2;
 
+IconGridLayout::Mode IconGridLayout::modeFromString(const QString mode)
+{
+    if (mode == "ForceHeight") {
+        return IconGridLayout::ForceHeight;
+    } else {
+        return IconGridLayout::ForceWidth;
+    }
+}
+
+QString IconGridLayout::modeToString(IconGridLayout::Mode mode)
+{
+    if (mode == IconGridLayout::ForceHeight) {
+        return QString("ForceHeight");
+    } else {
+        return QString("ForceWidth");
+    }
+}
+
 IconGridLayout::IconGridLayout(QGraphicsLayoutItem *parent)
     : QGraphicsLayout(parent),
       m_items(),
       m_mode(ForceHeight),
       m_maxSectionSize(100),
       m_maxSectionCount(0),
-      m_maxSectionCountForced(false),
       m_rowCount(0),
       m_columnCount(0),
       m_cellHeight(0),
@@ -100,18 +117,17 @@ void IconGridLayout::setMaxSectionCount(int maxSectionCount)
     invalidate();
 }
 
-bool IconGridLayout::maxSectionCountForced() const
+uint IconGridLayout::maxSectionSize() const
 {
-    return m_maxSectionCountForced;
+    return m_maxSectionSize;
 }
 
-void IconGridLayout::setMaxSectionCountForced(bool enable)
+void IconGridLayout::setMaxSectionSize(uint maxSectionSize)
 {
-    if (m_maxSectionCountForced == enable) {
+    if (m_maxSectionSize == maxSectionSize) {
         return;
     }
-
-    m_maxSectionCountForced = enable;
+    m_maxSectionSize = maxSectionSize;
     updateGridParameters();
     invalidate();
 }
@@ -179,14 +195,12 @@ void IconGridLayout::removeItem(QGraphicsLayoutItem *item) {
 void IconGridLayout::setGeometry(const QRectF &rect)
 {
     QGraphicsLayout::setGeometry(rect);
-    kDebug() << "setgeom" << rect;
     updateGridParameters();
 
     qreal offsetLeft = rect.left();
     qreal offsetTop = rect.top();
 
     QPointF pos(offsetLeft, offsetTop);
-    kDebug() << "posin" << m_columnCount << m_rowCount << m_cellWidth << m_cellHeight << pos;
     QSizeF size(m_cellWidth, m_cellHeight);
 
     int itemCount = m_items.size();
@@ -202,7 +216,7 @@ void IconGridLayout::setGeometry(const QRectF &rect)
         } else {
             pos.rx() += m_cellWidth + CELL_SPACING;
         }
-    kDebug() << "pos " << pos;
+
         m_items[i]->setGeometry(QRectF(pos, size));
     }
 }
@@ -256,35 +270,45 @@ void IconGridLayout::computeGridParameters(QSizeF &preferredSize)
     const int height = int(contentsRect().height());
     const int width = int(contentsRect().width());
 
-    kDebug() << "reconf" << width << height;
-
-    kDebug() << "start_cell" << preferredCellWidth << preferredCellHeight;
     if (m_mode == ForceHeight) {
         preferredCellHeight = m_maxSectionSize;
         usableCellHeight = qMax(qMin(m_maxSectionSize,
                                      height),
                                 minCellHeight);
 
-        int maximumRowCount = floor(double(height + CELL_SPACING) / (usableCellHeight + CELL_SPACING));
-        columnCount = ceil(double(itemCount) / maximumRowCount);
+        if (this->m_maxSectionCount == 0) {
+            int maximumRowCount = floor(double(height + CELL_SPACING) / (usableCellHeight + CELL_SPACING));
+            columnCount = ceil(double(itemCount) / maximumRowCount);
+        } else {
+            columnCount = this->m_maxSectionCount;
+        }
         rowCount = ceil(double(itemCount) / columnCount);
 
         int availableCellWidth = (width + CELL_SPACING) / columnCount - CELL_SPACING;
         usableCellWidth = qMin(availableCellWidth, width);
     } else {
-    }
+        preferredCellWidth = m_maxSectionSize;
+        usableCellWidth = qMax(qMin(m_maxSectionSize,
+                                     width),
+                                minCellWidth);
 
-    kDebug() << "resultcell" << preferredCellWidth << preferredCellHeight;
-    int maxCellHeight =
-        qMax(minCellHeight,
-             (height - (rowCount - 1) * CELL_SPACING) / rowCount);
+        if (this->m_maxSectionCount == 0) {
+            int maximumColumnCount = floor(double(width + CELL_SPACING) / (usableCellWidth + CELL_SPACING));
+            rowCount = ceil(double(itemCount) / maximumColumnCount);
+        } else {
+            rowCount = this->m_maxSectionCount;
+        }
+        columnCount = ceil(double(itemCount) / rowCount);
+
+        int availableCellHeight = (height + CELL_SPACING) / rowCount - CELL_SPACING;
+        usableCellHeight = qMin(availableCellHeight, height);
+    }
 
     Q_ASSERT(rowCount > 0 && columnCount > 0);
 
     preferredSize.setWidth(columnCount * (preferredCellWidth + CELL_SPACING) - CELL_SPACING);
     preferredSize.setHeight(rowCount * (preferredCellHeight + CELL_SPACING) - CELL_SPACING);
 
-    kDebug() << "preferred" << preferredSize;
     m_cellHeight = usableCellHeight;
     m_cellWidth = usableCellWidth;
 

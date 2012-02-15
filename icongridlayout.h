@@ -39,6 +39,9 @@ public:
         ForceWidth
     };
 
+    static Mode modeFromString(const QString s);
+    static QString modeToString(Mode);
+
     IconGridLayout(QGraphicsLayoutItem *parent = 0);
     ~IconGridLayout();
 
@@ -46,12 +49,13 @@ public:
     void setMode(Mode mode);
 
     int maxSectionCount() const;
+    uint maxSectionSize() const;
 
     /**
      * Depending on the mode, @c setMaxSectionCount limits either the
      * number of rows or the number of columns that are displayed. In
-     * @c PreferColumns mode, @a maxSectionCount limites the maximum
-     * number of columns while in @c PreferRows mode, it applies to
+     * @c ForceHeight mode, @a maxSectionCount limits the maximum
+     * number of columns while in @c ForceWidth mode, it applies to
      * the maximum number of rows.
      *
      * Setting @a maxSectionCount to @c 0 disables the limitation.
@@ -60,10 +64,7 @@ public:
      *    (depending on the mode) that should be displayed.
      */
     void setMaxSectionCount(int maxSectionCount);
-
-    bool maxSectionCountForced() const;
-
-    void setMaxSectionCountForced(bool enable);
+    void setMaxSectionSize(uint maxSectionSize);
 
     void addItem(QGraphicsLayoutItem *item);
     void removeItem(QGraphicsLayoutItem *item);
@@ -91,7 +92,6 @@ private:
     Mode m_mode;
     int m_maxSectionSize;
     int m_maxSectionCount;
-    bool m_maxSectionCountForced;
 
     int m_rowCount;
     int m_columnCount;

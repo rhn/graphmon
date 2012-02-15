@@ -2,6 +2,7 @@
 #define SWAPUSAGE_H
 
 #include "simpleplotter.h"
+#include <KConfigGroup>
 
 class SwapInfo
 {
@@ -13,11 +14,24 @@ public:
     void reset();
 };
 
+class SwapColors
+{
+public:
+    SwapColors();
+    SwapColors(const KConfigGroup &config);
+    void save(KConfigGroup &config);
+
+    QColor background;
+    QColor used;
+    QColor free;
+};
+
 class SwapUsage
 {
 public:
     SwapUsage();
-    void addValue(QString name, double value);
+    void addValue(QString &name, double value);
+    void setColors(const SwapColors &colors);
 
 private:
     void update();

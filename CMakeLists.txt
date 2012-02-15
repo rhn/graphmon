@@ -19,7 +19,7 @@ set(multiload_SRCS
     multiload.cpp)
 
 #find_package(KDE4 REQUIRED)
-
+kde4_add_ui_files(multiload_SRCS color-config.ui general-config.ui)
 kde4_add_plugin(plasma_applet_multiload ${multiload_SRCS})
 target_link_libraries(plasma_applet_multiload
                       ${KDE4_PLASMA_LIBS} ${KDE4_KDEUI_LIBS})
