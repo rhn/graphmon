@@ -32,6 +32,8 @@ NetThroughput::NetThroughput(const QString &if_name)
 
     this->m_signal_plotter->setUseAutoMax(true);
     this->m_signal_plotter->setBinary(true);
+    this->m_signal_plotter->setLabel(if_name);
+    this->m_signal_plotter->setShowLabel(true);
 
     this->m_signal_plotter->addPlot(Qt::red);
     this->m_signal_plotter->addPlot(Qt::green);
@@ -69,4 +71,8 @@ void NetThroughput::update() {
 void NetThroughput::setColors(const NetColors &colors) {
     this->m_signal_plotter->setBackgroundColor(colors.background);
     this->m_signal_plotter->setPlotColors(QList<QColor>() << colors.transmit << colors.receive);
+}
+
+void NetThroughput::setLabelSize(uint size) {
+    this->m_signal_plotter->setLabelSize(size);
 }

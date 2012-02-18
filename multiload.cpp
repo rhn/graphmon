@@ -58,8 +58,11 @@ void Multiload::init()
     this->m_ram_usage->setColors(m_ram_colors);
     this->m_swap_usage->setColors(m_swap_colors);
 
-    m_update_interval = cfg.readEntry("update_interval", 500);
-    this->m_layout->setMaxSectionSize(cfg.readEntry("layout_section_size", 30));
+    this->m_update_interval = cfg.readEntry("update_interval", 500);
+
+    this->m_label_size = cfg.readEntry("plot_label_size", 13);
+
+    this->m_layout->setMaxSectionSize(cfg.readEntry("layout_section_size", 50));
     this->m_layout->setMaxSectionCount(cfg.readEntry("layout_section_count", 0));
 
     IconGridLayout::Mode mode = IconGridLayout::modeFromString(cfg.readEntry("layout_mode", "ForceHeight"));
@@ -117,6 +120,7 @@ void Multiload::insertNetSource(const QString &source) {
     if (!this->m_net_throughputs.contains(if_name)) {
         NetThroughput *new_net = new NetThroughput(if_name);
         new_net->setColors(this->m_net_colors);
+        new_net->setLabelSize(this->m_label_size);
 
         this->m_net_throughputs.insert(if_name, new_net);
 
@@ -211,7 +215,7 @@ void Multiload::dataUpdated(const QString& source, const Plasma::DataEngine::Dat
         } else {
             dir = NetThroughput::Receive;
         }
-        m_net_throughputs[if_name]->addValue(dir, data["value"].toDouble());
+        m_net_throughputs[if_name]->addValue(dir, data["value"].toDouble() * 1024); // data is measured in KiB
     }
 }
 
@@ -301,6 +305,7 @@ void Multiload::createConfigurationInterface(KConfigDialog *parent) {
     this->m_general_config_ui.setupUi(generalPage);
 
     this->m_general_config_ui.update_interval->setValue(this->m_update_interval);
+    this->m_general_config_ui.plot_label_size->setValue(this->m_label_size);
     this->m_general_config_ui.layout_section_size->setValue(this->m_layout->maxSectionSize());
     this->m_general_config_ui.layout_section_count->setValue(this->m_layout->maxSectionCount());
 
@@ -311,6 +316,7 @@ void Multiload::createConfigurationInterface(KConfigDialog *parent) {
     }
 
     connect(this->m_general_config_ui.update_interval, SIGNAL(valueChanged(int)), parent, SLOT(settingsModified()));
+    connect(this->m_general_config_ui.plot_label_size, SIGNAL(valueChanged(int)), parent, SLOT(settingsModified()));
     connect(this->m_general_config_ui.layout_section_size, SIGNAL(valueChanged(int)), parent, SLOT(settingsModified()));
     connect(this->m_general_config_ui.layout_section_count, SIGNAL(valueChanged(int)), parent, SLOT(settingsModified()));
     connect(this->m_general_config_ui.layout_mode, SIGNAL(currentIndexChanged(int)), parent, SLOT(settingsModified()));
@@ -374,6 +380,14 @@ void Multiload::configUpdated() {
     if (this->m_update_interval != m_general_config_ui.update_interval->value()) {
         this->setInterval(m_general_config_ui.update_interval->value());
         cfg.writeEntry("update_interval", this->m_update_interval);
+    }
+
+    if (this->m_label_size != m_general_config_ui.plot_label_size->value()) {
+        this->m_label_size = m_general_config_ui.plot_label_size->value();
+        Q_FOREACH(NetThroughput *net, m_net_throughputs.values()) {
+            net->setLabelSize(this->m_label_size);
+        }
+        cfg.writeEntry("plot_label_size", this->m_label_size);
     }
 
     uint section_size = m_general_config_ui.layout_section_size->value();

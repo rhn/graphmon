@@ -1,7 +1,7 @@
 #include "simpleplotter.h"
 #include <KDebug>
 #include <math.h>
-
+#include <Plasma/Theme>
 
 double sum_sample(QList<double> sample) {
     double value = 0;
@@ -11,6 +11,8 @@ double sum_sample(QList<double> sample) {
     return value;
 }
 
+const QStringList SimplePlotter::suffixes(QList<QString>() << "" << "K" << "M" << "G" << "T");
+
 SimplePlotter::SimplePlotter() :
     QGraphicsWidget(),
     m_use_auto_max(false),
@@ -18,7 +20,10 @@ SimplePlotter::SimplePlotter() :
     m_min_vertical(0),
     m_max_vertical(100),
     m_background_color(Qt::black),
-    m_inverted_plots_count(0)
+    m_inverted_plots_count(0),
+    m_show_label(false),
+    m_label(""),
+    m_label_size(16)
 {
 }
 
@@ -56,6 +61,34 @@ void SimplePlotter::setBinary(bool value)
     update();
 }
 
+void SimplePlotter::setLabel(const QString &label)
+{
+    this->m_label = label;
+    this->updateLabel();
+}
+
+void SimplePlotter::setLabelSize(uint label_size)
+{
+    this->m_label_size = label_size;
+    this->updateLabel();
+}
+
+void SimplePlotter::setShowLabel(bool value)
+{
+    this->m_show_label = value;
+    this->updateLabel();
+}
+
+void SimplePlotter::updateLabel()
+{
+    if (this->m_show_label) {
+        this->m_font_color = Plasma::Theme::defaultTheme()->color(Plasma::Theme::TextColor);
+        this->m_font = Plasma::Theme::defaultTheme()->font(Plasma::Theme::DefaultFont);
+        this->m_font.setPixelSize(m_label_size);
+    }
+    update();
+}
+
 void SimplePlotter::setVerticalRange(double min, double max)
 {
     this->m_min_vertical = min;
@@ -88,7 +121,59 @@ void SimplePlotter::paint(QPainter *painter, const QStyleOptionGraphicsItem *opt
 
     uint width = (uint) size().width();
     uint height = (uint) size().height();
-    drawPlots(painter, width, height);
+
+    uint plot_height = height;
+
+    if (this->m_show_label) {
+        plot_height -= m_label_size;
+        drawLabel(painter, QRect(0, plot_height, width, m_label_size));
+    }
+
+    drawPlots(painter, width, plot_height);
+}
+
+void SimplePlotter::drawLabel(QPainter *painter, const QRect &area) {
+    painter->save();
+
+    painter->setPen(this->m_font_color);
+    painter->setFont(this->m_font);
+
+    painter->drawText(area, Qt::AlignRight, this->m_label);
+
+    if (this->m_samples.count() == 0) {
+        return;
+    }
+
+    // Divide the number in order to find magnitude and new value.
+    QString currentValueText;
+    double currentValue = sum_sample(this->m_samples.back());
+
+    if (this->m_binary) { // operate on binary numbers, divide by 1024
+        int value = currentValue;
+        uint magnitude = 0;
+        while (value >= 1024) {
+            value /= 1024;
+            magnitude++;
+            if (magnitude + 1 == suffixes.count()) {
+                break;
+            }
+        }
+        currentValueText = QString::number(value) + suffixes[magnitude];
+    } else {
+        double value = currentValue;
+        uint magnitude = 0;
+        while (value >= 1000) {
+            value /= 1000;
+            magnitude++;
+            if (magnitude + 1 == suffixes.count()) {
+                break;
+            }
+        }
+        currentValueText = QString::number(value, 'g', 2) + suffixes[magnitude];
+    }
+
+    painter->drawText(area, Qt::AlignLeft, currentValueText);
+    painter->restore();
 }
 
 void SimplePlotter::drawPlots(QPainter *painter, int width, int height) {

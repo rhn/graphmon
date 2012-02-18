@@ -6,6 +6,7 @@
 #include <QColor>
 #include <QList>
 #include <QPainter>
+#include <QFont>
 
 class SimplePlotter : public QGraphicsWidget
 {
@@ -26,22 +27,38 @@ public:
     void setPlotColors(const QList<QColor> &colors);
     QColor getPlotColors();
 
+    void setLabel(const QString &label);
+    void setShowLabel(bool value);
+    void setLabelSize(uint label_size);
+
     //virtual void setGeometry(const QRectF &geometry);
 protected:
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
 
-    void drawWidget(QPainter *p, uint w, uint height);
-    void drawPlots(QPainter *p, int w, int h);
+    void drawPlots(QPainter *painter, int width, int height);
+    void drawLabel(QPainter *painter, const QRect &area);
 
 private:
+    void updateLabel();
+
+    QString m_label;
+    bool m_show_label;
     bool m_use_auto_max;
     bool m_binary;
     double m_min_vertical;
     double m_max_vertical;
-    QList<QColor> m_plot_colors;
+
     QList<QList<double> > m_samples;
+    QList<QColor> m_plot_colors;
     QColor m_background_color;
+    QColor m_font_color;
+
+    QFont m_font;
+    uint m_label_size;
+
     uint m_inverted_plots_count;
+
+    static const QStringList suffixes;
 };
 
 #endif // SIMPLEPLOTTER_H

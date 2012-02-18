@@ -58,6 +58,8 @@ private:
     SwapColors m_swap_colors;
     NetColors m_net_colors;
 
+    uint m_label_size;
+
     uint m_update_interval;
 
     IconGridLayout *m_layout;

@@ -38,6 +38,7 @@ public:
     NetThroughput(const QString &if_name);
     void addValue(Direction dir, double value);
     void setColors(const NetColors &colors);
+    void setLabelSize(uint size);
     QString m_if_name;
 
 private:
