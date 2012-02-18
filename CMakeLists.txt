@@ -12,7 +12,7 @@ endif(NOT KDE4_FOUND)
 
 set(multiload_SRCS
     simpleplotter.cpp
-    icongridlayout.cpp
+    rigidgridlayout.cpp
     cpuload.cpp
     ramusage.cpp
     swapusage.cpp

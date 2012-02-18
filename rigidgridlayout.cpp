@@ -17,7 +17,7 @@
  *   Free Software Foundation, Inc.,                                       *
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301,  USA.         *
  ***************************************************************************/
-#include "icongridlayout.h"
+#include "rigidgridlayout.h"
 
 // Qt
 #include <Qt>
@@ -35,27 +35,27 @@
 // stdlib
 #include <math.h>
 
-const int IconGridLayout::CELL_SPACING = 2;
+const int RigidGridLayout::CELL_SPACING = 2;
 
-IconGridLayout::Mode IconGridLayout::modeFromString(const QString mode)
+RigidGridLayout::Mode RigidGridLayout::modeFromString(const QString mode)
 {
     if (mode == "ForceHeight") {
-        return IconGridLayout::ForceHeight;
+        return RigidGridLayout::ForceHeight;
     } else {
-        return IconGridLayout::ForceWidth;
+        return RigidGridLayout::ForceWidth;
     }
 }
 
-QString IconGridLayout::modeToString(IconGridLayout::Mode mode)
+QString RigidGridLayout::modeToString(RigidGridLayout::Mode mode)
 {
-    if (mode == IconGridLayout::ForceHeight) {
+    if (mode == RigidGridLayout::ForceHeight) {
         return QString("ForceHeight");
     } else {
         return QString("ForceWidth");
     }
 }
 
-IconGridLayout::IconGridLayout(QGraphicsLayoutItem *parent)
+RigidGridLayout::RigidGridLayout(QGraphicsLayoutItem *parent)
     : QGraphicsLayout(parent),
       m_items(),
       m_mode(ForceHeight),
@@ -75,7 +75,7 @@ IconGridLayout::IconGridLayout(QGraphicsLayoutItem *parent)
     setSizePolicy(sizePolicy);
 }
 
-IconGridLayout::~IconGridLayout()
+RigidGridLayout::~RigidGridLayout()
 {
     Q_FOREACH(QGraphicsLayoutItem *item, m_items) {
         if (item->ownedByLayout()) {
@@ -85,12 +85,12 @@ IconGridLayout::~IconGridLayout()
     m_items.clear();
 }
 
-IconGridLayout::Mode IconGridLayout::mode() const
+RigidGridLayout::Mode RigidGridLayout::mode() const
 {
     return m_mode;
 }
 
-void IconGridLayout::setMode(Mode mode)
+void RigidGridLayout::setMode(Mode mode)
 {
     if (mode == m_mode) {
         return;
@@ -101,12 +101,12 @@ void IconGridLayout::setMode(Mode mode)
     invalidate();
 }
 
-int IconGridLayout::maxSectionCount() const
+int RigidGridLayout::maxSectionCount() const
 {
     return m_maxSectionCount;
 }
 
-void IconGridLayout::setMaxSectionCount(int maxSectionCount)
+void RigidGridLayout::setMaxSectionCount(int maxSectionCount)
 {
     if (m_maxSectionCount == maxSectionCount) {
         return;
@@ -117,12 +117,12 @@ void IconGridLayout::setMaxSectionCount(int maxSectionCount)
     invalidate();
 }
 
-uint IconGridLayout::maxSectionSize() const
+uint RigidGridLayout::maxSectionSize() const
 {
     return m_maxSectionSize;
 }
 
-void IconGridLayout::setMaxSectionSize(uint maxSectionSize)
+void RigidGridLayout::setMaxSectionSize(uint maxSectionSize)
 {
     if (m_maxSectionSize == maxSectionSize) {
         return;
@@ -132,7 +132,7 @@ void IconGridLayout::setMaxSectionSize(uint maxSectionSize)
     invalidate();
 }
 
-void IconGridLayout::addItem(QGraphicsLayoutItem *item)
+void RigidGridLayout::addItem(QGraphicsLayoutItem *item)
 {
     m_items.append(item);
     addChildLayoutItem(item);
@@ -141,7 +141,7 @@ void IconGridLayout::addItem(QGraphicsLayoutItem *item)
     invalidate();
 }
 
-void IconGridLayout::insertItem(int index, QGraphicsLayoutItem *item)
+void RigidGridLayout::insertItem(int index, QGraphicsLayoutItem *item)
 {
     m_items.insert(index, item);
     addChildLayoutItem(item);
@@ -150,32 +150,32 @@ void IconGridLayout::insertItem(int index, QGraphicsLayoutItem *item)
     invalidate();
 }
 
-int IconGridLayout::rowCount() const
+int RigidGridLayout::rowCount() const
 {
     return m_rowCount;
 }
 
-int IconGridLayout::columnCount() const
+int RigidGridLayout::columnCount() const
 {
     return m_columnCount;
 }
 
-int IconGridLayout::count() const
+int RigidGridLayout::count() const
 {
     return m_items.size();
 }
 
-QGraphicsLayoutItem *IconGridLayout::itemAt(int index) const
+QGraphicsLayoutItem *RigidGridLayout::itemAt(int index) const
 {
     return m_items[index];
 }
 
-QGraphicsLayoutItem *IconGridLayout::itemAt(int row, int column) const
+QGraphicsLayoutItem *RigidGridLayout::itemAt(int row, int column) const
 {
     return m_items[row * m_columnCount + column];
 }
 
-void IconGridLayout::removeAt(int index)
+void RigidGridLayout::removeAt(int index)
 {
     QGraphicsLayoutItem *item = m_items.takeAt(index);
     item->setParentLayoutItem(0);
@@ -186,11 +186,11 @@ void IconGridLayout::removeAt(int index)
     invalidate();
 }
 
-void IconGridLayout::removeItem(QGraphicsLayoutItem *item) {
+void RigidGridLayout::removeItem(QGraphicsLayoutItem *item) {
     this->removeAt(this->m_items.indexOf(item));
 }
 
-void IconGridLayout::setGeometry(const QRectF &rect)
+void RigidGridLayout::setGeometry(const QRectF &rect)
 {
     QGraphicsLayout::setGeometry(rect);
     updateGridParameters();
@@ -219,7 +219,7 @@ void IconGridLayout::setGeometry(const QRectF &rect)
     }
 }
 
-QSizeF IconGridLayout::sizeHint(
+QSizeF RigidGridLayout::sizeHint(
     Qt::SizeHint which, const QSizeF &constraint) const
 {
     Q_UNUSED(constraint);
@@ -239,7 +239,7 @@ QSizeF IconGridLayout::sizeHint(
     }
 }
 
-void IconGridLayout::computeGridParameters(QSizeF &preferredSize)
+void RigidGridLayout::computeGridParameters(QSizeF &preferredSize)
 {
     const int itemCount = m_items.size();
     if (itemCount == 0) {
@@ -314,7 +314,7 @@ void IconGridLayout::computeGridParameters(QSizeF &preferredSize)
     m_rowCount = rowCount;
 }
 
-void IconGridLayout::updateGridParameters()
+void RigidGridLayout::updateGridParameters()
 {
     QSizeF newPreferredSize;
 

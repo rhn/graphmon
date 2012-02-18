@@ -17,8 +17,8 @@
  *   Free Software Foundation, Inc.,                                       *
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301,  USA.         *
  ***************************************************************************/
-#ifndef ICONGRIDLAYOUT_H
-#define ICONGRIDLAYOUT_H
+#ifndef RIGIDGRIDLAYOUT_H
+#define RIGIDGRIDLAYOUT_H
 
 // Qt
 #include <Qt>
@@ -31,7 +31,7 @@ class QEvent;
 class QRectF;
 class QGraphicsLayoutItem;
 
-class IconGridLayout : public QGraphicsLayout {
+class RigidGridLayout : public QGraphicsLayout {
 
 public:
 
@@ -43,8 +43,8 @@ public:
     static Mode modeFromString(const QString s);
     static QString modeToString(Mode);
 
-    IconGridLayout(QGraphicsLayoutItem *parent = 0);
-    ~IconGridLayout();
+    RigidGridLayout(QGraphicsLayoutItem *parent = 0);
+    ~RigidGridLayout();
 
     Mode mode() const;
     void setMode(Mode mode);
@@ -101,4 +101,4 @@ private:
     QSizeF m_preferredSizeHint;
 };
 
-#endif /* ICONGRIDLAYOUT_H */
+#endif /* RIGIDGRIDLAYOUT_H */

@@ -8,7 +8,7 @@
 #include <QVector>
 #include <QHash>
 
-#include "icongridlayout.h"
+#include "rigidgridlayout.h"
 #include "cpuload.h"
 #include "ramusage.h"
 #include "swapusage.h"
@@ -62,7 +62,7 @@ private:
 
     uint m_update_interval;
 
-    IconGridLayout *m_layout;
+    RigidGridLayout *m_layout;
 
     Ui::ColorConfig m_color_config_ui;
     Ui::GeneralConfig m_general_config_ui;

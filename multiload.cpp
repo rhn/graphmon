@@ -6,7 +6,7 @@
 Multiload::Multiload(QObject *parent, const QVariantList &args)
     : Plasma::Applet(parent, args)
     , m_update_interval(500)
-    , m_layout(new IconGridLayout())
+    , m_layout(new RigidGridLayout())
 {
     setHasConfigurationInterface(true);
 
@@ -65,7 +65,7 @@ void Multiload::init()
     this->m_layout->setMaxSectionSize(cfg.readEntry("layout_section_size", 50));
     this->m_layout->setMaxSectionCount(cfg.readEntry("layout_section_count", 0));
 
-    IconGridLayout::Mode mode = IconGridLayout::modeFromString(cfg.readEntry("layout_mode", "ForceHeight"));
+    RigidGridLayout::Mode mode = RigidGridLayout::modeFromString(cfg.readEntry("layout_mode", "ForceHeight"));
     this->m_layout->setMode(mode);
 
     connect(dataEngine("systemmonitor"), SIGNAL(sourceAdded(QString)), this, SLOT(sourceAdded(QString)));
@@ -309,7 +309,7 @@ void Multiload::createConfigurationInterface(KConfigDialog *parent) {
     this->m_general_config_ui.layout_section_size->setValue(this->m_layout->maxSectionSize());
     this->m_general_config_ui.layout_section_count->setValue(this->m_layout->maxSectionCount());
 
-    if (this->m_layout->mode() == IconGridLayout::ForceHeight) {
+    if (this->m_layout->mode() == RigidGridLayout::ForceHeight) {
         this->m_general_config_ui.layout_mode->setCurrentIndex(0);
     } else {
         this->m_general_config_ui.layout_mode->setCurrentIndex(1);
@@ -399,14 +399,14 @@ void Multiload::configUpdated() {
     cfg.writeEntry("layout_section_count", section_count);
 
     uint mode_index = m_general_config_ui.layout_mode->currentIndex();
-    IconGridLayout::Mode mode;
+    RigidGridLayout::Mode mode;
     if (mode_index == 0) {
-        mode = IconGridLayout::ForceHeight;
+        mode = RigidGridLayout::ForceHeight;
     } else {
-        mode = IconGridLayout::ForceWidth;
+        mode = RigidGridLayout::ForceWidth;
     }
     this->m_layout->setMode(mode);
-    cfg.writeEntry("layout_mode", IconGridLayout::modeToString(mode));
+    cfg.writeEntry("layout_mode", RigidGridLayout::modeToString(mode));
 
     emit configNeedsSaving();
 }
