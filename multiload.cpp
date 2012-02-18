@@ -66,6 +66,7 @@ void Multiload::init()
     this->m_layout->setMode(mode);
 
     connect(dataEngine("systemmonitor"), SIGNAL(sourceAdded(QString)), this, SLOT(sourceAdded(QString)));
+    connect(dataEngine("systemmonitor"), SIGNAL(sourceRemoved(QString)), this, SLOT(sourceRemoved(QString)));
     kDebug() << "inited";
 
     // XXX: race condition hell: if any sources change now, the changes are lost
@@ -76,7 +77,6 @@ void Multiload::init()
 
 void Multiload::sourceAdded(const QString& source)
 {
-    // TODO: remove CPUs
     // TODO: more sensible sources
     if (source == "cpu/cores") {
         dataEngine("systemmonitor")->connectSource(source, this, this->m_update_interval);
@@ -88,6 +88,21 @@ void Multiload::sourceAdded(const QString& source)
         dataEngine("systemmonitor")->connectSource(source, this, this->m_update_interval);
     } else if (source.startsWith("network/interfaces/") && source.endsWith("/data")) {
         this->insertNetSource(source);
+    }
+}
+
+void Multiload::sourceRemoved(const QString &source)
+{
+    if (source == "cpu/cores") {
+        dataEngine("systemmonitor")->disconnectSource(source, this);
+    } else if (source.startsWith("cpu/cpu")) {
+        dataEngine("systemmonitor")->disconnectSource(source, this);
+    } else if (source.startsWith("mem/physical")) {
+        dataEngine("systemmonitor")->disconnectSource(source, this);
+    } else if (source.startsWith("mem/swap")) {
+        dataEngine("systemmonitor")->disconnectSource(source, this);
+    } else if (source.startsWith("network/interfaces/") && source.endsWith("/data")) {
+        this->removeNetSource(source);
     }
 }
 
@@ -119,14 +134,15 @@ void Multiload::removeNetSource(const QString &source)
 {
     QStringList fragments = source.split('/');
     QString if_name = fragments[2];
-
-    if (!this->m_net_throughputs.contains(if_name)) {
+    kDebug() << "removed net" << source;
+    if (this->m_net_throughputs.contains(if_name)) {
         NetThroughput *net = this->m_net_throughputs[if_name];
         this->m_net_throughputs.remove(if_name);
 
         this->m_layout->removeItem(net->m_signal_plotter);
         delete net;
     } else {
+        kDebug() << "ignored";
         // I don't care. Transfer/receive should always come in pairs
     }
 

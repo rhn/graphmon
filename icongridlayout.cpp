@@ -180,9 +180,7 @@ void IconGridLayout::removeAt(int index)
     QGraphicsLayoutItem *item = m_items.takeAt(index);
     item->setParentLayoutItem(0);
 
-    if (item->ownedByLayout()) {
-        delete item;
-    }
+    delete item;
 
     updateGridParameters();
     invalidate();

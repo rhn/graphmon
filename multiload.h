@@ -34,6 +34,7 @@ public:
 protected slots:
     void configUpdated();
     void sourceAdded(const QString& source);
+    void sourceRemoved(const QString& source);
     void dataUpdated(const QString& source, const Plasma::DataEngine::Data &data);
 
 private:
