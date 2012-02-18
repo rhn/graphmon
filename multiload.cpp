@@ -1,7 +1,4 @@
 #include "multiload.h"
-#include "cpuload.h"
-#include "ramusage.h"
-#include "swapusage.h"
 
 #include <QtGui/QPainter>
 #include <KConfigDialog>
@@ -33,6 +30,11 @@ Multiload::~Multiload() {
     }
     this->m_cpu_load.clear();
 
+    Q_FOREACH(NetThroughput *netthroughput, this->m_net_throughputs.values()) {
+        delete netthroughput;
+    }
+    this->m_net_throughputs.clear();
+
     delete this->m_ram_usage;
     delete this->m_swap_usage;
 }
@@ -41,22 +43,17 @@ void Multiload::init()
 {
     KConfigGroup cfg = config();
 
-    kDebug() << cfg.keyList();
+    CPUColors new_cpu_colors(cfg);
+    m_cpu_colors = new_cpu_colors;
 
-    m_cpu_colors << QColor(cfg.readEntry("cpu_bg_color", QColor(Qt::black).name()));
-    m_cpu_colors << QColor(cfg.readEntry("cpu_sys_color", QColor(Qt::darkRed).name()));
-    m_cpu_colors << QColor(cfg.readEntry("cpu_user_color", QColor(Qt::green).name()));
-    m_cpu_colors << QColor(cfg.readEntry("cpu_nice_color", QColor(Qt::blue).name()));
-    m_cpu_colors << QColor(cfg.readEntry("cpu_wait_color", QColor(Qt::white).name()));
-
-    m_ram_colors << QColor(cfg.readEntry("ram_bg_color", QColor(Qt::darkBlue).name()));
-    m_ram_colors << QColor(cfg.readEntry("ram_application_color", QColor(Qt::darkGreen).name()));
-    m_ram_colors << QColor(cfg.readEntry("ram_buffers_color", QColor(Qt::red).name()));
-    m_ram_colors << QColor(cfg.readEntry("ram_cached_color", QColor(Qt::yellow).name()));
-    m_ram_colors << QColor(cfg.readEntry("ram_free_color", QColor(Qt::black).name()));
+    RAMColors new_ram_colors(cfg);
+    m_ram_colors = new_ram_colors;
 
     SwapColors new_swap_colors(cfg);
     m_swap_colors = new_swap_colors;
+
+    NetColors new_net_colors(cfg);
+    m_net_colors = new_net_colors;
 
     this->m_ram_usage->setColors(m_ram_colors);
     this->m_swap_usage->setColors(m_swap_colors);
@@ -81,7 +78,6 @@ void Multiload::sourceAdded(const QString& source)
 {
     // TODO: remove CPUs
     // TODO: more sensible sources
-    //kDebug() << source;
     if (source == "cpu/cores") {
         dataEngine("systemmonitor")->connectSource(source, this, this->m_update_interval);
     } else if (source.startsWith("cpu/cpu")) {
@@ -90,7 +86,51 @@ void Multiload::sourceAdded(const QString& source)
         dataEngine("systemmonitor")->connectSource(source, this, this->m_update_interval);
     } else if (source.startsWith("mem/swap")) {
         dataEngine("systemmonitor")->connectSource(source, this, this->m_update_interval);
+    } else if (source.startsWith("network/interfaces/") && source.endsWith("/data")) {
+        this->insertNetSource(source);
     }
+}
+
+void Multiload::insertNetSource(const QString &source) {
+    QStringList fragments = source.split('/');
+    QString if_name = fragments[2];
+
+    if (if_name == "lo") {
+        return;
+    }
+
+    if (!this->m_net_throughputs.contains(if_name)) {
+        NetThroughput *new_net = new NetThroughput(if_name);
+        new_net->setColors(this->m_net_colors);
+
+        this->m_net_throughputs.insert(if_name, new_net);
+
+        int index = this->m_cpu_load.count() + 1 + 1 + this->m_net_throughputs.count();
+
+        this->m_layout->insertItem(index, new_net->m_signal_plotter);
+    } else {
+        // I don't care. Transfer/receive should always come in pairs
+    }
+
+    dataEngine("systemmonitor")->connectSource(source, this, this->m_update_interval);
+}
+
+void Multiload::removeNetSource(const QString &source)
+{
+    QStringList fragments = source.split('/');
+    QString if_name = fragments[2];
+
+    if (!this->m_net_throughputs.contains(if_name)) {
+        NetThroughput *net = this->m_net_throughputs[if_name];
+        this->m_net_throughputs.remove(if_name);
+
+        this->m_layout->removeItem(net->m_signal_plotter);
+        delete net;
+    } else {
+        // I don't care. Transfer/receive should always come in pairs
+    }
+
+    dataEngine("systemmonitor")->disconnectSource(source, this);
 }
 
 void Multiload::setInterval(uint milliseconds) {
@@ -109,6 +149,17 @@ void Multiload::setInterval(uint milliseconds) {
         }
         // reconnect
         this->sourceAdded(source);
+    }
+
+    Q_FOREACH(NetThroughput *throughput, this->m_net_throughputs.values()) {
+        QString rxSourceName = QString("network/interfaces/") + throughput->m_if_name + QString("/receiver/data");
+        QString txSourceName = QString("network/interfaces/") + throughput->m_if_name + QString("/transmitter/data");
+
+        dataEngine("systemmonitor")->disconnectSource(rxSourceName, this);
+        dataEngine("systemmonitor")->disconnectSource(txSourceName, this);
+
+        this->sourceAdded(rxSourceName);
+        this->sourceAdded(txSourceName);
     }
 }
 
@@ -133,6 +184,18 @@ void Multiload::dataUpdated(const QString& source, const Plasma::DataEngine::Dat
         QStringList fragments = source.split('/');
         QString value_name = fragments.back();
         m_swap_usage->addValue(value_name, data["value"].toDouble());
+    } else if (source.startsWith("network/interfaces") && source.endsWith("/data")) {
+        QStringList fragments = source.split('/');
+        QString if_name = fragments[2];
+        QString direction = fragments[3];
+
+        NetThroughput::Direction dir;
+        if (direction == "transmitter") {
+            dir = NetThroughput::Transmit;
+        } else {
+            dir = NetThroughput::Receive;
+        }
+        m_net_throughputs[if_name]->addValue(dir, data["value"].toDouble());
     }
 }
 
@@ -173,11 +236,11 @@ void Multiload::createConfigurationInterface(KConfigDialog *parent) {
     this->m_color_config_ui.setupUi(colorPage);
 
     // CPU colors
-    this->m_color_config_ui.cpu_bg_color->setColor(this->m_cpu_colors[0]);
-    this->m_color_config_ui.cpu_sys_color->setColor(this->m_cpu_colors[1]);
-    this->m_color_config_ui.cpu_user_color->setColor(this->m_cpu_colors[2]);
-    this->m_color_config_ui.cpu_nice_color->setColor(this->m_cpu_colors[3]);
-    this->m_color_config_ui.cpu_wait_color->setColor(this->m_cpu_colors[4]);
+    this->m_color_config_ui.cpu_bg_color->setColor(this->m_cpu_colors.background);
+    this->m_color_config_ui.cpu_sys_color->setColor(this->m_cpu_colors.sys);
+    this->m_color_config_ui.cpu_user_color->setColor(this->m_cpu_colors.user);
+    this->m_color_config_ui.cpu_nice_color->setColor(this->m_cpu_colors.nice);
+    this->m_color_config_ui.cpu_wait_color->setColor(this->m_cpu_colors.wait);
 
     connect(this->m_color_config_ui.cpu_bg_color, SIGNAL(changed(QColor)), parent, SLOT(settingsModified()));
     connect(this->m_color_config_ui.cpu_sys_color, SIGNAL(changed(QColor)), parent, SLOT(settingsModified()));
@@ -186,11 +249,11 @@ void Multiload::createConfigurationInterface(KConfigDialog *parent) {
     connect(this->m_color_config_ui.cpu_wait_color, SIGNAL(changed(QColor)), parent, SLOT(settingsModified()));
 
     // RAM colors
-    this->m_color_config_ui.ram_bg_color->setColor(this->m_ram_colors[0]);
-    this->m_color_config_ui.ram_application_color->setColor(this->m_ram_colors[1]);
-    this->m_color_config_ui.ram_buffers_color->setColor(this->m_ram_colors[2]);
-    this->m_color_config_ui.ram_cached_color->setColor(this->m_ram_colors[3]);
-    this->m_color_config_ui.ram_free_color->setColor(this->m_ram_colors[4]);
+    this->m_color_config_ui.ram_bg_color->setColor(this->m_ram_colors.background);
+    this->m_color_config_ui.ram_application_color->setColor(this->m_ram_colors.application);
+    this->m_color_config_ui.ram_buffers_color->setColor(this->m_ram_colors.buf);
+    this->m_color_config_ui.ram_cached_color->setColor(this->m_ram_colors.cached);
+    this->m_color_config_ui.ram_free_color->setColor(this->m_ram_colors.free);
 
     connect(this->m_color_config_ui.ram_bg_color, SIGNAL(changed(QColor)), parent, SLOT(settingsModified()));
     connect(this->m_color_config_ui.ram_application_color, SIGNAL(changed(QColor)), parent, SLOT(settingsModified()));
@@ -206,6 +269,15 @@ void Multiload::createConfigurationInterface(KConfigDialog *parent) {
     connect(this->m_color_config_ui.swap_bg_color, SIGNAL(changed(QColor)), parent, SLOT(settingsModified()));
     connect(this->m_color_config_ui.swap_used_color, SIGNAL(changed(QColor)), parent, SLOT(settingsModified()));
     connect(this->m_color_config_ui.swap_free_color, SIGNAL(changed(QColor)), parent, SLOT(settingsModified()));
+
+    // net colors
+    this->m_color_config_ui.net_bg_color->setColor(this->m_net_colors.background);
+    this->m_color_config_ui.net_receive_color->setColor(this->m_net_colors.receive);
+    this->m_color_config_ui.net_transmit_color->setColor(this->m_net_colors.transmit);
+
+    connect(this->m_color_config_ui.net_bg_color, SIGNAL(changed(QColor)), parent, SLOT(settingsModified()));
+    connect(this->m_color_config_ui.net_receive_color, SIGNAL(changed(QColor)), parent, SLOT(settingsModified()));
+    connect(this->m_color_config_ui.net_transmit_color, SIGNAL(changed(QColor)), parent, SLOT(settingsModified()));
 
     // GENERAL
 
@@ -239,31 +311,27 @@ void Multiload::configUpdated() {
 
     // COLORS
     // CPU
-    QList<QColor> cpu_colors;
-    cpu_colors << m_color_config_ui.cpu_bg_color->color() << m_color_config_ui.cpu_sys_color->color() << m_color_config_ui.cpu_user_color->color() << m_color_config_ui.cpu_nice_color->color() << m_color_config_ui.cpu_wait_color->color();
-    m_cpu_colors = cpu_colors;
+    m_cpu_colors.background = m_color_config_ui.cpu_bg_color->color();
+    m_cpu_colors.sys = m_color_config_ui.cpu_sys_color->color();
+    m_cpu_colors.user = m_color_config_ui.cpu_user_color->color();
+    m_cpu_colors.nice = m_color_config_ui.cpu_nice_color->color();
+    m_cpu_colors.wait = m_color_config_ui.cpu_wait_color->color();
+
     Q_FOREACH(CPULoad *cpu, m_cpu_load) {
         cpu->setColors(m_cpu_colors);
     }
-
-    cfg.writeEntry("cpu_bg_color", cpu_colors[0].name());
-    cfg.writeEntry("cpu_sys_color", cpu_colors[1].name());
-    cfg.writeEntry("cpu_user_color", cpu_colors[2].name());
-    cfg.writeEntry("cpu_nice_color", cpu_colors[3].name());
-    cfg.writeEntry("cpu_wait_color", cpu_colors[4].name());
+    m_cpu_colors.save(cfg);
 
     // RAM
-    QList<QColor> ram_colors;
-    ram_colors << m_color_config_ui.ram_bg_color->color() << m_color_config_ui.ram_application_color->color() << m_color_config_ui.ram_buffers_color->color() << m_color_config_ui.ram_cached_color->color() << m_color_config_ui.ram_free_color->color();
-    m_ram_colors = ram_colors;
+    m_ram_colors.background = m_color_config_ui.ram_bg_color->color();
+    m_ram_colors.application = m_color_config_ui.ram_application_color->color();
+    m_ram_colors.buf = m_color_config_ui.ram_buffers_color->color();
+    m_ram_colors.cached = m_color_config_ui.ram_cached_color->color();
+    m_ram_colors.free = m_color_config_ui.ram_free_color->color();
 
     m_ram_usage->setColors(m_ram_colors);
 
-    cfg.writeEntry("ram_bg_color", ram_colors[0].name());
-    cfg.writeEntry("ram_sys_color", ram_colors[1].name());
-    cfg.writeEntry("ram_user_color", ram_colors[2].name());
-    cfg.writeEntry("ram_nice_color", ram_colors[3].name());
-    cfg.writeEntry("ram_wait_color", ram_colors[4].name());
+    m_ram_colors.save(cfg);
 
     // SWAP
     m_swap_colors.background = m_color_config_ui.swap_bg_color->color();
@@ -274,8 +342,16 @@ void Multiload::configUpdated() {
 
     m_swap_colors.save(cfg);
 
-    // TODO: NET
+    // NET
+    m_net_colors.background = m_color_config_ui.net_bg_color->color();
+    m_net_colors.receive = m_color_config_ui.net_receive_color->color();
+    m_net_colors.transmit = m_color_config_ui.net_transmit_color->color();
 
+    Q_FOREACH(NetThroughput *net, m_net_throughputs.values()) {
+        net->setColors(m_net_colors);
+    }
+
+    m_net_colors.save(cfg);
 
     // GENERAL
 

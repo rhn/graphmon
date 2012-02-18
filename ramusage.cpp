@@ -12,6 +12,28 @@ void RAMInfo::reset()
     free_since_update = 0;
 }
 
+RAMColors::RAMColors()
+{
+}
+
+RAMColors::RAMColors(const KConfigGroup &config)
+{
+    background = QColor(config.readEntry("ram_bg_color", QColor(Qt::darkBlue).name()));
+    application = QColor(config.readEntry("ram_application_color", QColor(Qt::darkGreen).name()));
+    buf = QColor(config.readEntry("ram_buf_color", QColor(Qt::red).name()));
+    cached = QColor(config.readEntry("ram_cached_color", QColor(Qt::darkYellow).name()));
+    free = QColor(config.readEntry("ram_free_color", QColor(Qt::black).name()));
+}
+
+void RAMColors::save(KConfigGroup &config)
+{
+    config.writeEntry("ram_bg_color", background.name());
+    config.writeEntry("ram_application_color", application.name());
+    config.writeEntry("ram_cached_color", cached.name());
+    config.writeEntry("ram_buf_color", buf.name());
+    config.writeEntry("ram_free_color", free.name());
+}
+
 RAMUsage::RAMUsage()
 {
     m_signal_plotter = new SimplePlotter();
@@ -31,7 +53,7 @@ RAMUsage::RAMUsage()
     QSizePolicy sizePolicy(
         QSizePolicy::MinimumExpanding, QSizePolicy::MinimumExpanding);
     this->m_signal_plotter->setSizePolicy(sizePolicy);
-    // TODO: memory leak
+    // TODO: memory leak?
 }
 
 void RAMUsage::addValue(QString &name, double value) {
@@ -60,8 +82,7 @@ void RAMUsage::update()
     this->m_ram_info.reset();
 }
 
-void RAMUsage::setColors(QList<QColor> colors) {
-    this->m_signal_plotter->setBackgroundColor(colors[0]);
-    colors.pop_front();
-    this->m_signal_plotter->setPlotColors(colors);
+void RAMUsage::setColors(const RAMColors &colors) {
+    this->m_signal_plotter->setBackgroundColor(colors.background);
+    this->m_signal_plotter->setPlotColors(QList<QColor>() << colors.application << colors.buf << colors.cached << colors.free);
 }

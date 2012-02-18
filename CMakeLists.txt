@@ -16,6 +16,7 @@ set(multiload_SRCS
     cpuload.cpp
     ramusage.cpp
     swapusage.cpp
+    netthroughput.cpp
     multiload.cpp)
 
 #find_package(KDE4 REQUIRED)

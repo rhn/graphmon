@@ -12,10 +12,13 @@ double sum_sample(QList<double> sample) {
 }
 
 SimplePlotter::SimplePlotter() :
+    QGraphicsWidget(),
     m_use_auto_max(false),
+    m_binary(false),
     m_min_vertical(0),
     m_max_vertical(100),
-    m_background_color(Qt::black)
+    m_background_color(Qt::black),
+    m_inverted_plots_count(0)
 {
 }
 
@@ -44,12 +47,25 @@ void SimplePlotter::setPlotColors(const QList<QColor> &colors)
 void SimplePlotter::setUseAutoMax(bool value)
 {
     this->m_use_auto_max = value;
+    update();
+}
+
+void SimplePlotter::setBinary(bool value)
+{
+    this->m_binary = value;
+    update();
 }
 
 void SimplePlotter::setVerticalRange(double min, double max)
 {
     this->m_min_vertical = min;
     this->m_max_vertical = max;
+    update();
+}
+
+void SimplePlotter::setInvertedPlotsCount(uint count) {
+    this->m_inverted_plots_count = count;
+    update();
 }
 
 void SimplePlotter::addPlot(const QColor &color) {
@@ -91,20 +107,54 @@ void SimplePlotter::drawPlots(QPainter *painter, int width, int height) {
         Q_FOREACH(QList<double> sample, this->m_samples) {
             max_vertical = qMax(max_vertical, sum_sample(sample));
         }
+
+        if (this->m_binary) {
+            int vert_size = round(max_vertical - min_vertical);
+
+            // make vert_size rounded to nearest bigger power of 2
+            int bit_count = 0;
+            while(vert_size) {
+                bit_count++;
+                vert_size >>= 1;
+            }
+            vert_size = (1 << bit_count);
+
+            max_vertical = vert_size + min_vertical;
+        }
+    }
+
+    if (max_vertical == 0) {
+        max_vertical = 1;
     }
 
     int left = width - this->m_samples.count();
 
     Q_FOREACH(QList<double> sample, this->m_samples) {
-        double bottom = height;
+        double bottom = height; // for normal graphs
+        double top = 0; // for inverted graphs
 
         if (left >= 0) {
             int plot_index = 0;
             Q_FOREACH(double value, sample) {
+                // FIXME: clip to pixels, not values
                 double vheight = (value - min_vertical) / (max_vertical - min_vertical) * height;
-                painter->fillRect(left, bottom - vheight, 1, ceil(vheight), this->m_plot_colors[plot_index]);
-                bottom -= vheight;
-                Q_ASSERT(bottom >= -1); // float precision. should be 0
+
+                if (plot_index < this->m_inverted_plots_count) {
+                    // draw inverted (stack from top)
+                    vheight = qMin(vheight, height - top);
+                    painter->fillRect(left, top, 1, ceil(vheight), this->m_plot_colors[plot_index]);
+
+                    top += vheight;
+                    Q_ASSERT(top < height + 1); // float error
+                } else {
+                    // draw normal (stack from bottom)
+                    top = qMax(bottom - vheight, double(0));
+
+                    painter->fillRect(left, top, 1, ceil(vheight), this->m_plot_colors[plot_index]);
+
+                    bottom -= vheight;
+                    Q_ASSERT(bottom >= -1); // float precision. should be 0
+                }
                 plot_index++;
             }
         }

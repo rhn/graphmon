@@ -14,12 +14,26 @@ public:
     void reset();
 };
 
+class CPUColors
+{
+public:
+    CPUColors();
+    CPUColors(const KConfigGroup &config);
+    void save(KConfigGroup &config);
+
+    QColor background;
+    QColor user;
+    QColor sys;
+    QColor nice;
+    QColor wait;
+};
+
 class CPULoad
 {
 public:
     CPULoad(void);
     void addValue(QString &name, double value);
-    void setColors(QList<QColor> colors);
+    void setColors(const CPUColors &colors);
 
 private:
     void update();

@@ -13,6 +13,23 @@ void CpuInfo::reset() {
     wait_since_update = 0;
 }
 
+CPUColors::CPUColors() {}
+
+CPUColors::CPUColors(const KConfigGroup &config) {
+    background = QColor(config.readEntry("cpu_bg_color", QColor(Qt::black).name()));
+    sys = QColor(config.readEntry("cpu_sys_color", QColor(Qt::red).name()));
+    user = QColor(config.readEntry("cpu_user_color", QColor(Qt::green).name()));
+    nice = QColor(config.readEntry("cpu_nice_color", QColor(Qt::blue).name()));
+    wait = QColor(config.readEntry("cpu_wait_color", QColor(Qt::white).name()));
+}
+
+void CPUColors::save(KConfigGroup &config) {
+    config.writeEntry("cpu_bg_color", background.name());
+    config.writeEntry("cpu_sys_color", sys.name());
+    config.writeEntry("cpu_user_color", user.name());
+    config.writeEntry("cpu_nice_color", nice.name());
+    config.writeEntry("cpu_wait_color", wait.name());
+}
 
 CPULoad::CPULoad(void)
 {
@@ -62,8 +79,7 @@ void CPULoad::update()
     this->m_cpu_info.reset();
 }
 
-void CPULoad::setColors(QList<QColor> colors) {
-    this->m_signal_plotter->setBackgroundColor(colors[0]);
-    colors.pop_front();
-    this->m_signal_plotter->setPlotColors(colors);
+void CPULoad::setColors(const CPUColors &colors) {
+    this->m_signal_plotter->setBackgroundColor(colors.background);
+    this->m_signal_plotter->setPlotColors(QList<QColor>() << colors.sys << colors.user << colors.nice << colors.wait);
 }

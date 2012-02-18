@@ -4,10 +4,15 @@
 #include <Plasma/Applet>
 #include <Plasma/DataEngine>
 
+#include <QList>
+#include <QVector>
+#include <QHash>
+
 #include "icongridlayout.h"
 #include "cpuload.h"
 #include "ramusage.h"
 #include "swapusage.h"
+#include "netthroughput.h"
 
 #include "ui_color-config.h"
 #include "ui_general-config.h"
@@ -33,6 +38,9 @@ protected slots:
 
 private:
     void setCoreCount(const uint core_count);
+    void insertNetSource(const QString& source);
+    void removeNetSource(const QString& source);
+
     void insertCPU(void);
     void removeCPU(void);
 
@@ -42,10 +50,12 @@ private:
     QVector<CPULoad*> m_cpu_load;
     RAMUsage *m_ram_usage;
     SwapUsage *m_swap_usage;
+    QHash<QString, NetThroughput*> m_net_throughputs;
 
-    QList<QColor> m_cpu_colors;
-    QList<QColor> m_ram_colors;
+    CPUColors m_cpu_colors;
+    RAMColors m_ram_colors;
     SwapColors m_swap_colors;
+    NetColors m_net_colors;
 
     uint m_update_interval;
 

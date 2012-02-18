@@ -28,11 +28,11 @@
      <x>0</x>
      <y>0</y>
      <width>371</width>
-     <height>261</height>
+     <height>271</height>
     </rect>
    </property>
    <property name="currentIndex">
-    <number>2</number>
+    <number>3</number>
    </property>
    <widget class="QWidget" name="tab_3">
     <property name="sizePolicy">
@@ -238,6 +238,56 @@
       </item>
       <item row="2" column="1">
        <widget class="KColorButton" name="swap_free_color"/>
+      </item>
+     </layout>
+    </widget>
+   </widget>
+   <widget class="QWidget" name="tab_2">
+    <attribute name="title">
+     <string>Net</string>
+    </attribute>
+    <widget class="QWidget" name="formLayoutWidget_4">
+     <property name="geometry">
+      <rect>
+       <x>9</x>
+       <y>9</y>
+       <width>341</width>
+       <height>201</height>
+      </rect>
+     </property>
+     <layout class="QFormLayout" name="formLayout_4">
+      <property name="formAlignment">
+       <set>Qt::AlignHCenter|Qt::AlignTop</set>
+      </property>
+      <item row="0" column="0">
+       <widget class="QLabel" name="label_14">
+        <property name="text">
+         <string>Background:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="label_15">
+        <property name="text">
+         <string>Transmit:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="label_16">
+        <property name="text">
+         <string>Receive:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="KColorButton" name="net_bg_color"/>
+      </item>
+      <item row="1" column="1">
+       <widget class="KColorButton" name="net_transmit_color"/>
+      </item>
+      <item row="2" column="1">
+       <widget class="KColorButton" name="net_receive_color"/>
       </item>
      </layout>
     </widget>

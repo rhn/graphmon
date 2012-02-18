@@ -2,6 +2,7 @@
 #define RAMUSAGE_H
 
 #include "simpleplotter.h"
+#include <KConfigGroup>
 
 class RAMInfo
 {
@@ -13,12 +14,26 @@ public:
     void reset();
 };
 
+class RAMColors
+{
+public:
+    RAMColors();
+    RAMColors(const KConfigGroup &config);
+    void save(KConfigGroup &config);
+
+    QColor background;
+    QColor application;
+    QColor cached;
+    QColor buf;
+    QColor free;
+};
+
 class RAMUsage
 {
 public:
     RAMUsage();
     void addValue(QString &name, double value);
-    void setColors(QList<QColor> colors);
+    void setColors(const RAMColors &colors);
 
 private:
     void update();

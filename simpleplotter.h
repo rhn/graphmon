@@ -17,7 +17,9 @@ public:
     void addPlot(const QColor &color);
     void addSample(const QList<double> &samples);
     void setUseAutoMax(bool value);
+    void setBinary(bool value);
     void setVerticalRange(double min, double max);
+    void setInvertedPlotsCount(uint count);
 
     void setBackgroundColor(const QColor &color);
     QColor getBackgroundColors();
@@ -33,11 +35,13 @@ protected:
 
 private:
     bool m_use_auto_max;
+    bool m_binary;
     double m_min_vertical;
     double m_max_vertical;
     QList<QColor> m_plot_colors;
     QList<QList<double> > m_samples;
     QColor m_background_color;
+    uint m_inverted_plots_count;
 };
 
 #endif // SIMPLEPLOTTER_H

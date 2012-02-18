@@ -1,5 +1,6 @@
 /***************************************************************************
  *   Copyright (C) 2010 - 2011 by Ingomar Wesp <ingomar@wesp.name>         *
+ *   Copyright (C) 2012 by rhn <kdde.rhn@porcupinefactory.org>             *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
